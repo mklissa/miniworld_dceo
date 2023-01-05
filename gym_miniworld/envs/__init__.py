@@ -1,22 +1,22 @@
 import inspect
 import gym
 
-from .remotebot import *
+# from .remotebot import *
 from .hallway import *
 from .oneroom import *
-from .roomobjs import *
-from .pickupobjs import *
-from .tmaze import *
-from .ymaze import *
-from .maze import *
+# from .roomobjs import *
+# from .pickupobjs import *
+# from .tmaze import *
+# from .ymaze import *
+# from .maze import *
 from .fourrooms import *
-from .threerooms import *
-from .wallgap import *
-from .sidewalk import *
-from .putnext import *
-from .collecthealth import *
-from .simtorealgoto import *
-from .simtorealpush import *
+# from .threerooms import *
+# from .wallgap import *
+# from .sidewalk import *
+# from .putnext import *
+# from .collecthealth import *
+# from .simtorealgoto import *
+# from .simtorealpush import *
 
 # Registered environment ids
 env_ids = []

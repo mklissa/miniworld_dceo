@@ -3,11 +3,11 @@ from enum import IntEnum
 import numpy as np
 import gym
 from gym import spaces
-from .random import *
+from .randoms import *
 from .opengl import *
 from .objmesh import *
 from .entity import *
-from .math import *
+from .maths import *
 from .params import *
 
 # Default wall height for room
@@ -435,9 +435,13 @@ class MiniWorldEnv(gym.Env):
 
     # Enumeration of possible actions
     class Actions(IntEnum):
-        # Turn left or right by a small amount
-        turn_left = 0
-        turn_right = 1
+        # # Turn left or right by a small amount
+        # turn_left = 0
+        # turn_right = 1
+
+        # Move left or right by a small amount
+        move_left = 0
+        move_right = 1
 
         # Move forward or back by a small amount
         move_forward = 2
@@ -461,7 +465,8 @@ class MiniWorldEnv(gym.Env):
         window_width=800,
         window_height=600,
         params=DEFAULT_PARAMS,
-        domain_rand=False
+        domain_rand=False,
+        obs_view='agent',
     ):
         # Action enumeration for this environment
         self.actions = MiniWorldEnv.Actions
@@ -518,6 +523,8 @@ class MiniWorldEnv(gym.Env):
             y = window_height - (self.obs_disp_height + 19)
         )
 
+        self.obs_view = obs_view
+
         # Initialize the state
         self.seed()
         self.reset()
@@ -529,11 +536,12 @@ class MiniWorldEnv(gym.Env):
         self.rand = RandGen(seed)
         return [seed]
 
-    def reset(self):
+    def reset(self, agent_pos=None):
         """
         Reset the simulation at the start of a new episode
         This also randomizes many environment parameters (domain randomization)
         """
+
 
         # Step count since episode start
         self.step_count = 0
@@ -550,6 +558,10 @@ class MiniWorldEnv(gym.Env):
         # Wall segments for collision detection
         # Shape is (N, 2, 3)
         self.wall_segs = []
+
+
+        if agent_pos is not None:
+            self.agent_pos = agent_pos
 
         # Generate the world
         self._gen_world()
@@ -586,7 +598,10 @@ class MiniWorldEnv(gym.Env):
         self._render_static()
 
         # Generate the first camera image
-        obs = self.render_obs()
+        if self.obs_view == 'agent':
+            obs = self.render_obs()
+        else:
+            obs = self.render_top_view()
 
         # Return first observation
         return obs
@@ -614,6 +629,33 @@ class MiniWorldEnv(gym.Env):
             self.agent.pos +
             self.agent.dir_vec * fwd_dist +
             self.agent.right_vec * fwd_drift
+        )
+
+        if self.intersect(self.agent, next_pos, self.agent.radius):
+            return False
+
+        carrying = self.agent.carrying
+        if carrying:
+            next_carrying_pos = self._get_carry_pos(next_pos, carrying)
+
+            if self.intersect(carrying, next_carrying_pos, carrying.radius):
+                return False
+
+            carrying.pos = next_carrying_pos
+
+        self.agent.pos = next_pos
+
+        return True
+
+    def move_agent_sideways(self, side_dist, side_drift):
+        """
+        Move the agent forward
+        """
+
+        next_pos = (
+            self.agent.pos +
+            self.agent.right_vec * side_dist +
+            self.agent.dir_vec * side_drift
         )
 
         if self.intersect(self.agent, next_pos, self.agent.radius):
@@ -673,11 +715,18 @@ class MiniWorldEnv(gym.Env):
         elif action == self.actions.move_back:
             self.move_agent(-fwd_step, fwd_drift)
 
-        elif action == self.actions.turn_left:
-            self.turn_agent(turn_step)
+        elif action == self.actions.move_left:
+            self.move_agent_sideways(-fwd_step, fwd_drift)
 
-        elif action == self.actions.turn_right:
-            self.turn_agent(-turn_step)
+        elif action == self.actions.move_right:
+            self.move_agent_sideways(fwd_step, fwd_drift)
+
+
+        # elif action == self.actions.turn_left:
+        #     self.turn_agent(turn_step)
+
+        # elif action == self.actions.turn_right:
+        #     self.turn_agent(-turn_step)
 
         # Pick up an object
         elif action == self.actions.pickup:
@@ -702,7 +751,10 @@ class MiniWorldEnv(gym.Env):
             self.agent.carrying.dir = self.agent.dir
 
         # Generate the current camera image
-        obs = self.render_obs()
+        if self.obs_view == 'agent':
+            obs = self.render_obs()
+        else:
+            obs = self.render_top_view()
 
         # If the maximum time step count is reached
         if self.step_count >= self.max_episode_steps:
@@ -886,7 +938,6 @@ class MiniWorldEnv(gym.Env):
                 low =[lx + ent.radius, 0, lz + ent.radius],
                 high=[hx - ent.radius, 0, hz - ent.radius]
             )
-
             # Make sure the position is within the room's outline
             if not r.point_inside(pos):
                 continue
@@ -909,6 +960,7 @@ class MiniWorldEnv(gym.Env):
     def place_agent(
         self,
         room=None,
+        pos=None,
         dir=None,
         min_x=None,
         max_x=None,
@@ -923,6 +975,7 @@ class MiniWorldEnv(gym.Env):
         return self.place_entity(
             self.agent,
             room=room,
+            pos=pos,
             dir=dir,
             min_x=min_x,
             max_x=max_x,

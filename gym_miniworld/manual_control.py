@@ -16,7 +16,7 @@ import gym
 import gym_miniworld
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--env-name', default='MiniWorld-FourRooms-v0')
+parser.add_argument('--env-name', default='MiniWorld-Hallway-v0')
 parser.add_argument('--domain-rand', action='store_true', help='enable domain randomization')
 parser.add_argument('--no-time-limit', action='store_true', help='ignore time step limits')
 parser.add_argument('--top_view', action='store_true', help='show the top view instead of the agent view')
@@ -26,8 +26,8 @@ env = gym.make(args.env_name)
 
 if args.no_time_limit:
     env.max_episode_steps = math.inf
-# if args.domain_rand:
-#     env.domain_rand = True
+if args.domain_rand:
+    env.domain_rand = True
 
 view_mode = 'top' if args.top_view else 'agent'
 
@@ -73,9 +73,9 @@ def on_key_press(symbol, modifiers):
         step(env.actions.move_back)
 
     elif symbol == key.LEFT:
-        step(env.actions.move_left)
+        step(env.actions.turn_left)
     elif symbol == key.RIGHT:
-        step(env.actions.move_right)
+        step(env.actions.turn_right)
 
     elif symbol == key.PAGEUP or symbol == key.P:
         step(env.actions.pickup)

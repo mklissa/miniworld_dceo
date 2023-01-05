@@ -1,6 +1,6 @@
 import math
 import numpy as np
-from .math import *
+from .maths import *
 from .opengl import *
 from .objmesh import ObjMesh
 

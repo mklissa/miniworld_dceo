@@ -44,7 +44,7 @@ class Texture:
         """
 
         paths = self.tex_paths.get(tex_name, [])
-
+        
         # Get an inventory of the existing texture files
         if len(paths) == 0:
             for i in range(1, 10):
