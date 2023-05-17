@@ -42,18 +42,21 @@ class Texture:
         Load a texture by name (or used a cached version)
         Also performs domain randomization if multiple versions are available.
         """
-
         paths = self.tex_paths.get(tex_name, [])
-        
+        doom = 'doom' in tex_name
         # Get an inventory of the existing texture files
         if len(paths) == 0:
-            for i in range(1, 10):
-                path = get_file_path('textures', '%s_%d' % (tex_name, i), 'png')
-
-                if not os.path.exists(path):
-                    break
+            if doom:
+                path = get_file_path('textures', '%s' % (tex_name), 'png')
                 paths.append(path)
+            else:
+                for i in range(1, 10):
 
+                    path = get_file_path('textures', '%s_%d' % (tex_name, i), 'png')
+
+                    if not os.path.exists(path):
+                        break
+                    paths.append(path)
         assert len(paths) > 0, 'failed to load textures for name "%s"' % tex_name
 
         # If domain-randomization is to be used

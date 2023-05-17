@@ -9,6 +9,7 @@ from .oneroom import *
 # from .tmaze import *
 # from .ymaze import *
 # from .maze import *
+from .mywayhome import *
 from .fourrooms import *
 # from .threerooms import *
 # from .wallgap import *

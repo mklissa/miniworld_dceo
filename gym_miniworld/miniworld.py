@@ -814,7 +814,8 @@ class MiniWorldEnv(gym.Env):
         max_x=None,
         min_z=None,
         max_z=None,
-        max_y=None
+        max_y=None,
+        wall_tex=None
     ):
         """
         Connect two rooms along facing edges
@@ -883,7 +884,7 @@ class MiniWorldEnv(gym.Env):
         room = Room(
             outline,
             wall_height=max_y,
-            wall_tex=room_a.wall_tex_name,
+            wall_tex=wall_tex if wall_tex else room_a.wall_tex_name,
             floor_tex=room_a.floor_tex_name,
             ceil_tex=room_a.ceil_tex_name,
             no_ceiling=room_a.no_ceiling,
@@ -1062,7 +1063,7 @@ class MiniWorldEnv(gym.Env):
         Default sparse reward computation
         """
 
-        return 1.0 - 0.2 * (self.step_count / self.max_episode_steps)
+        return 1.0# - 0.2 * (self.step_count / self.max_episode_steps)
 
     def _render_static(self):
         """

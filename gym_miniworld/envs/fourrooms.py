@@ -13,7 +13,7 @@ class FourRooms(MiniWorldEnv):
     def __init__(self, agent_pos=[-6.5, 0, -6.5], **kwargs):
         self.agent_pos = agent_pos
         super().__init__(
-            max_episode_steps=250,
+            max_episode_steps=1000,
             **kwargs
         )
         # Allow only the movement actions
@@ -24,25 +24,25 @@ class FourRooms(MiniWorldEnv):
         room0 = self.add_rect_room(
             min_x=-7, max_x=-1,
             min_z=1 , max_z=7,
-            # wall_tex='cardboard'
+            wall_tex='cardboard'
         )
         # Top-right room
         room1 = self.add_rect_room(
             min_x=1, max_x=7,
             min_z=1, max_z=7,
-            # wall_tex='marble'
+            wall_tex='marble'
         )
         # Bottom-right room
         room2 = self.add_rect_room(
             min_x=1 , max_x=7,
             min_z=-7, max_z=-1,
-            # wall_tex='metal_grill'
+            wall_tex='metal_grill'
         )
         # Bottom-left room
         room3 = self.add_rect_room(
             min_x=-7, max_x=-1,
             min_z=-7, max_z=-1,
-            # wall_tex='stucco'
+            wall_tex='stucco'
         )
 
         # Add openings to connect the rooms together
@@ -51,8 +51,12 @@ class FourRooms(MiniWorldEnv):
         self.connect_rooms(room2, room3, min_z=-5, max_z=-3, max_y=2.2)
         self.connect_rooms(room3, room0, min_x=-5, max_x=-3, max_y=2.2)
 
-        # self.box = self.place_entity(Box(color='red'))
-        self.place_agent(dir=0)#, pos=self.agent_pos)
+        agent_x = np.random.uniform(-6, -2)
+        agent_z = np.random.uniform(-6, -2)
+        self.agent_pos = [agent_x, 0., agent_z]
+
+        self.box = self.place_entity(Box(color='red'), pos=np.array([1.5, 0.0, 1.5]))
+        self.place_agent(dir=0, pos=self.agent_pos)
 
     def set_agent_pos(self, agent_pos):
         self.agent_pos = agent_pos
@@ -60,8 +64,8 @@ class FourRooms(MiniWorldEnv):
     def step(self, action):
         obs, reward, done, info = super().step(action)
 
-        # if self.near(self.box):
-        #     reward += self._reward()
-        #     done = True
+        if self.near(self.box):
+            reward += self._reward()
+            done = True
 
         return obs, reward, done, info
