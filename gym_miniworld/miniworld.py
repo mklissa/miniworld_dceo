@@ -601,6 +601,7 @@ class MiniWorldEnv(gym.Env):
         if self.obs_view == 'agent':
             obs = self.render_obs()
         else:
+    
             obs = self.render_top_view()
 
         # Return first observation
@@ -972,7 +973,6 @@ class MiniWorldEnv(gym.Env):
         Place the agent in the environment at a random position
         and orientation
         """
-
         return self.place_entity(
             self.agent,
             room=room,
