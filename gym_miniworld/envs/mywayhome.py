@@ -10,14 +10,17 @@ class MyWayHome(MiniWorldEnv):
     Classic four rooms environment
     """
 
-    def __init__(self, sparse=False, verysparse=False, tv=False, **kwargs):
+    def __init__(self, sparse=False, verysparse=False, tv=False, coverage_plot=False, **kwargs):
 
         params = DEFAULT_PARAMS.no_random()
         params.set('forward_step', 0.27)
         params.set('turn_step', 30)
-        self.sparse=sparse
-        self.verysparse=verysparse
-        self.tv=tv
+        self.sparse = sparse
+        self.verysparse = verysparse
+        self.tv = tv
+        self.coverage_plot = coverage_plot
+        self.agent_pos = [-8., 0., 3.]
+        self.valid_pos = True
 
         super().__init__(
             max_episode_steps=2100,
@@ -26,7 +29,6 @@ class MyWayHome(MiniWorldEnv):
 
         # Movement actions 
         self.action_space = spaces.Discrete(self.actions.move_back+1)
-
 
     def _gen_world(self):
 
@@ -138,14 +140,23 @@ class MyWayHome(MiniWorldEnv):
         self.connect_rooms(roomright, roompregoal,  min_x=8, max_x=10, max_y=wall_height,wall_tex='doom_SILVER2')
         self.connect_rooms(roompregoal, roomgoal,  min_x=8, max_x=10, max_y=wall_height,wall_tex='doom_BIGBRIK1')
 
-        self.box = self.place_entity(Box(color='red'),pos=[9,0,5])
+        self.box = self.place_entity(Box(color='red'), pos=[9 ,0, 5])
 
         if self.sparse:
             self.place_agent(room=roomsparse, dir=0)
         elif self.verysparse:
             self.place_agent(room=roomverysparse, dir=0)
+        elif self.coverage_plot:
+            self.place_agent(dir=0, pos=self.agent_pos)
+            conds = []
+            for room in self.rooms:
+                conds.append(room.point_inside(self.agent_pos))
+            self.valid_pos = any(conds)
         else:
             self.place_agent(dir=0)
+
+    def set_agent_pos(self, agent_pos):
+        self.agent_pos = agent_pos
 
     def step(self, action):
 
@@ -166,3 +177,8 @@ class MyWayHomeSparse(MyWayHome):
 class MyWayHomeVerySparse(MyWayHome):
     def __init__(self):
         super().__init__(verysparse=True)
+
+
+class MyWayHomeCoverage(MyWayHome):
+    def __init__(self):
+        super().__init__(coverage_plot=True)
