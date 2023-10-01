@@ -10,14 +10,18 @@ class FourRooms(MiniWorldEnv):
     The agent must reach the red box to get a reward.
     """
 
-    def __init__(self, agent_pos=[-6.5, 0, -6.5], **kwargs):
+    def __init__(self, agent_pos=[-6.5, 0, -6.5], coverage_plot=False, **kwargs):
         self.agent_pos = agent_pos
+        self.coverage_plot = coverage_plot
         super().__init__(
             max_episode_steps=1000,
             **kwargs
         )
         # Allow only the movement actions
         self.action_space = spaces.Discrete(self.actions.move_back+1)
+        agent_x = np.random.uniform(-6, -2)
+        agent_z = np.random.uniform(-6, -2)
+        self.agent_pos = [agent_x, 0., agent_z]
 
     def _gen_world(self):
         # Top-left room
@@ -51,12 +55,14 @@ class FourRooms(MiniWorldEnv):
         self.connect_rooms(room2, room3, min_z=-5, max_z=-3, max_y=2.2)
         self.connect_rooms(room3, room0, min_x=-5, max_x=-3, max_y=2.2)
 
-        agent_x = np.random.uniform(-6, -2)
-        agent_z = np.random.uniform(-6, -2)
-        self.agent_pos = [agent_x, 0., agent_z]
-
         self.box = self.place_entity(Box(color='red'), pos=np.array([1.5, 0.0, 1.5]))
         self.place_agent(dir=0, pos=self.agent_pos)
+
+        if self.coverage_plot:
+            conds = []
+            for room in self.rooms:
+                conds.append(room.point_inside(self.agent_pos))
+            self.valid_pos = any(conds)
 
     def set_agent_pos(self, agent_pos):
         self.agent_pos = agent_pos
@@ -69,3 +75,8 @@ class FourRooms(MiniWorldEnv):
             done = True
 
         return obs, reward, done, info
+
+
+class FourRoomsCoverage(FourRooms):
+    def __init__(self):
+        super().__init__(coverage_plot=True)
