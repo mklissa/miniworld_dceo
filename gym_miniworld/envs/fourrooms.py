@@ -18,7 +18,7 @@ class FourRooms(MiniWorldEnv):
             **kwargs
         )
         # Allow only the movement actions
-        self.action_space = spaces.Discrete(self.actions.move_back+1)
+        self.action_space = spaces.Discrete(self.actions.move_back+1) # 0-indexed
         agent_x = np.random.uniform(-6, -2)
         agent_z = np.random.uniform(-6, -2)
         self.agent_pos = [agent_x, 0., agent_z]
@@ -80,3 +80,78 @@ class FourRooms(MiniWorldEnv):
 class FourRoomsCoverage(FourRooms):
     def __init__(self):
         super().__init__(coverage_plot=True)
+
+
+class FourRoomsActions(FourRooms):
+    """
+    Classic four rooms environment.
+    The agent must reach the red box to get a reward.
+    """
+
+    def step(self, action):
+        """
+        Perform one action and update the simulation
+        """
+
+        self.step_count += 1
+
+        rand = self.rand if self.domain_rand else None
+        fwd_step = self.params.sample(rand, 'forward_step')
+        fwd_drift = self.params.sample(rand, 'forward_drift')
+        turn_step = self.params.sample(rand, 'turn_step')
+
+        if action == self.actions.move_forward:
+            self.move_agent(fwd_step, fwd_drift)
+
+        elif action == self.actions.move_back:
+            self.turn_agent(turn_step * 2)
+            self.move_agent(fwd_step, fwd_drift)
+
+        elif action == self.actions.move_left:
+            self.turn_agent(turn_step)
+            self.move_agent(fwd_step, fwd_drift)
+
+        elif action == self.actions.move_right:
+            self.turn_agent(-turn_step)
+            self.move_agent(fwd_step, fwd_drift)
+
+        # Pick up an object
+        elif action == self.actions.pickup:
+            # Position at which we will test for an intersection
+            test_pos = self.agent.pos + self.agent.dir_vec * 1.5 * self.agent.radius
+            ent = self.intersect(self.agent, test_pos, 1.2 * self.agent.radius)
+            if not self.agent.carrying:
+                if isinstance(ent, Entity):
+                    if not ent.is_static:
+                        self.agent.carrying = ent
+
+        # Drop an object being carried
+        elif action == self.actions.drop:
+            if self.agent.carrying:
+                self.agent.carrying.pos[1] = 0
+                self.agent.carrying = None
+
+        # If we are carrying an object, update its position as we move
+        if self.agent.carrying:
+            ent_pos = self._get_carry_pos(self.agent.pos, self.agent.carrying)
+            self.agent.carrying.pos = ent_pos
+            self.agent.carrying.dir = self.agent.dir
+
+        # Generate the current camera image
+        if self.obs_view == 'agent':
+            obs = self.render_obs()
+        else:
+            obs = self.render_top_view()
+
+        # If the maximum time step count is reached
+        if self.step_count >= self.max_episode_steps:
+            done = True
+            reward = 0
+            return obs, reward, done, {}
+
+        reward = 0
+        done = False
+
+        return obs, reward, done, {}
+
+

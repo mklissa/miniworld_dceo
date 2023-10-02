@@ -13,8 +13,8 @@ ys = np.arange(-10.3, 10.7, .25)
 xs = np.arange(-4.3, 14.7, .25)
 
 # # FourRooms values
-xs = np.arange(-6.5, 6.5, .5)
-ys = np.arange(-6.5, 6.5, .5)
+xs = np.arange(-6.4, 6.5, .5)
+ys = np.arange(-6.4, 6.5, .5)
 
 buffer = []
 valid_pos = []
@@ -45,10 +45,12 @@ for i, x in enumerate(xs):
 			obs = default_obs
 		valid_pos.append(env.valid_pos)
 
-		env.render(view='top')
-		time.sleep(0.05)
-		plt.imshow(obs)
-		plt.savefig(f"plots/4r_{iter}_{y:.2f}_{x:.2f}_{env.valid_pos}.png")
+		# env.render(view='top')
+		# time.sleep(0.05)
+
+		# plt.imshow(obs)
+		# plt.savefig(f"plots/4r_{iter}_{y:.2f}_{x:.2f}_{env.valid_pos}.png")
+		# plt.close()
 
 		i += 1
 		iter += 1
